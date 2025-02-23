@@ -1,4 +1,6 @@
 import Event from "../models/event_model.js";
+import { deleteFromCloudinary } from "../middlewares/upload.js";
+
 
 export const createEvent = async (req, res) => {
     try {
@@ -7,10 +9,12 @@ export const createEvent = async (req, res) => {
         }
 
         let { eventId, title, description, event_date } = req.body;
-        let images = req.files?.images?.map(file => file.path) || [];
-        let videos = req.files?.videos?.map(file => file.path) || [];
+
+        let images = req.processedImages || [];
+        let videos = req.processedVideos || [];
 
         if (eventId) {
+            // Updating an existing event
             const event = await Event.findById(eventId);
             if (!event) {
                 return res.status(404).json({ message: "Event not found", data: {} });
@@ -38,6 +42,7 @@ export const createEvent = async (req, res) => {
                 },
             });
         } else {
+            // Creating a new event
             if (!title || !description || !event_date) {
                 return res.status(400).json({ message: "Title, description, and event date are required", data: {} });
             }
@@ -67,11 +72,10 @@ export const createEvent = async (req, res) => {
             });
         }
     } catch (error) {
-        console.error("Error in createEvent:", error);
+        console.error("❌ Error in createEvent:", error);
         return res.status(500).json({ message: "Internal Server Error", data: {} });
     }
 };
-
 
 export const getEventById = async (req, res) => {
     console.log("API Hit: getEventById",req.userId);
@@ -136,3 +140,26 @@ export const getAllEvents = async (req, res) => {
     }
 };
 
+
+export const deleteEvent = async (req, res) => {
+    try {
+        const { eventId } = req.params;
+
+        if (!eventId) {
+            return res.status(400).json({ message: "Event ID is required", data: {} });
+        }
+
+        const event = await Event.findOne({ eventId });
+        if (!event) {
+            return res.status(404).json({ message: "Event not found", data: {} });
+        }
+        await Promise.all(event.images.map((url) => deleteFromCloudinary(url)));
+        await Promise.all(event.videos.map((url) => deleteFromCloudinary(url)));
+
+        await Event.deleteOne({ eventId });
+
+        return res.status(200).json({ message: "Event deleted successfully" });
+    } catch (error) {
+        return res.status(500).json({ message: "Internal Server Error", data: {} });
+    }
+};

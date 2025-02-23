@@ -60,64 +60,80 @@
             background-color: #cc0000;
         }
 
-      /* Ensure event header is properly aligned */
+
+        /* Right-align Event ID and Password */
+        .event-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            text-align: right;
+        }
+
+        /* Password field styling */
+        .password-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            /* Space between password and eye icon */
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 10px;
+            border-radius: 5px;
+            white-space: nowrap;
+        }
+
+        /* Password input */
+        .password-container input {
+            background: none;
+            border: none;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            width: 120px;
+            outline: none;
+        }
+
+        /* Eye icon */
+        .password-container i {
+            cursor: pointer;
+            font-size: 18px;
+            color: white;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .event-header {
+                flex-direction: column;
+                align-items: flex-start;
+                text-align: left;
+            }
+
+            .event-info {
+                align-items: flex-start;
+                text-align: left;
+            }
+        }
+
+       /* Fix header position issue */
 .event-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
+    width: 100%;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    z-index: 10; /* Lower z-index so it's not overlapping */
+    margin-top: 20px; /* Push it below the buttons */
 }
 
-/* Right-align Event ID and Password */
-.event-info {
+/* Fix button container layout */
+.button-container {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    text-align: right;
-}
-
-/* Password field styling */
-.password-container {
-    display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 8px; /* Space between password and eye icon */
-    background: rgba(255, 255, 255, 0.1);
-    padding: 5px 10px;
-    border-radius: 5px;
-    white-space: nowrap;
-}
-
-/* Password input */
-.password-container input {
-    background: none;
-    border: none;
-    color: white;
-    font-weight: bold;
-    text-align: center;
-    width: 120px;
-    outline: none;
-}
-
-/* Eye icon */
-.password-container i {
-    cursor: pointer;
-    font-size: 18px;
-    color: white;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .event-header {
-        flex-direction: column;
-        align-items: flex-start;
-        text-align: left;
-    }
-
-    .event-info {
-        align-items: flex-start;
-        text-align: left;
-    }
+    width: 100%;
+    margin-bottom: 20px; /* Add space so header isn't hidden */
+    position: relative; /* Ensure it stays in flow */
+    z-index: 20; /* Higher z-index so buttons are always above */
 }
 
     </style>
@@ -125,9 +141,22 @@
 
 <body>
     <div class="container">
-        <button class="btn btn-back" id="backButton"><i class="fas fa-arrow-left"></i> Back</button>
+        <!-- 🔹 Button Row (Back, Selected Images, Delete Event) -->
+        <div class="button-container">
+            <button class="btn btn-back" id="backButton">
+                <i class="fas fa-arrow-left"></i> Back
+            </button>
+            <div>
+                <button class="btn btn-primary me-2" id="selectedImages">
+                    Selected Images
+                </button>
+                <button class="btn btn-danger" id="deleteEvent">
+                    Delete Event <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
     
-        <!-- 🔹 Event Header (Fully Responsive) -->
+        <!-- 🔹 Event Header (Now properly aligned below buttons) -->
         <div class="event-header">
             <h1 id="eventTitle"></h1>
             <div class="event-info">
@@ -136,18 +165,34 @@
                     <span id="eventId"></span>
                     <i class="fas fa-copy" id="copyEventId" style="cursor: pointer; margin-left: 5px;"></i>
                 </p>
-                <p>
+                <p class="password-container">
                     <strong>🔒 Password:</strong>
-                    <input type="password" id="eventPassword" readonly style="background: none; border: none; color: white; font-weight: bold; text-align: center; width: 120px; outline: none;">
-                    <i class="fas fa-eye" id="togglePassword" style="cursor: pointer; margin-left: 5px;"></i>
+                    <input type="password" id="eventPassword" readonly>
+                    <i class="fas fa-eye" id="togglePassword"></i>
                 </p>
             </div>
         </div>
+    
+        <!-- 🔹 Event Description and Images -->
         <div id="eventDescription"></div>
         <div class="image-grid" id="imageGrid"></div>
     </div>
+    
 
     <script>
+        document.getElementById('selectedImages').addEventListener('click', () => {
+            const eventId = document.getElementById('eventId').textContent;
+            const password = document.getElementById('eventPassword').value;
+
+            if (!eventId || !password) {
+                alert("Event ID or Password not found!");
+                return;
+            }
+
+            // Navigate to selected-images.html with eventId and password as URL parameters
+            window.location.href = `/selected-images?eventId=${encodeURIComponent(eventId)}&password=${encodeURIComponent(password)}`;
+        });
+
         // Copy Event ID to clipboard
         document.getElementById('copyEventId').addEventListener('click', () => {
             const eventId = document.getElementById('eventId').textContent;
@@ -179,67 +224,115 @@
         });
 
         async function fetchEventDetails() {
-    try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const paramEventId = urlParams.get('eventId');
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const paramEventId = urlParams.get('eventId');
 
-        if (!paramEventId) {
-            throw new Error('Event ID not found in URL.');
+                if (!paramEventId) {
+                    throw new Error('Event ID not found in URL.');
+                }
+
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('No authentication token found. Please log in.');
+                }
+
+                const response = await fetch(`http://localhost:3000/events/getEventById/${paramEventId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+                console.log("Fetched Event Data:", result);
+
+                const event = result.data;
+                if (!event || !event.eventId) {
+                    throw new Error('Invalid event data received.');
+                }
+
+                // Display event details
+                document.getElementById('eventTitle').textContent = event.title;
+                document.getElementById('eventDescription').textContent = event.description;
+                document.getElementById('eventId').textContent = event.eventId;
+                document.getElementById('eventPassword').value = event.password;
+
+                // Select image grid
+                const imageGrid = document.getElementById('imageGrid');
+
+                // ✅ If images exist, show them; otherwise, show a GIF
+                if (event.images && event.images.length > 0) {
+                    imageGrid.innerHTML = event.images.map(image => {
+                        // Extract the image name from the URL
+                        const imageName = image.split('/').pop(); // Gets 'IMG_1038.jpg'
+
+                        return `
+            <div style="text-align: center; margin-bottom: 15px;">
+                <img src="${image}" alt="Event Image" style="width: 200px; border-radius: 10px;">
+                <p style="margin-top: 5px; font-weight: bold;">${imageName}</p>
+            </div>
+        `;
+                    }).join('');
+                } else {
+                    imageGrid.innerHTML = `
+        <div style="text-align: center;">
+            <img src="https://lottiefiles.com/animation/no-data-found-10917533" 
+                 alt="No images found" 
+                 style="width: 200px; border-radius: 10px;">
+            <p>No images available for this event.</p>
+        </div>`;
+                }
+
+
+                // Update URL with the event ID
+                window.history.replaceState(null, "", `?eventId=${event.eventId}`);
+
+            } catch (error) {
+                console.error('Error fetching event details:', error);
+                alert(error.message || 'Failed to load event details. Please try again later.');
+            }
         }
+        fetchEventDetails();
 
-        const token = localStorage.getItem('token');
-        if (!token) {
-            throw new Error('No authentication token found. Please log in.');
-        }
+        document.getElementById('deleteEvent').addEventListener('click', async () => {
+            const eventId = document.getElementById('eventId').textContent;
+            if (!eventId) {
+                alert("Event ID not found!");
+                return;
+            }
 
-        const response = await fetch(`http://localhost:3000/events/getEventById/${paramEventId}`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${token}`
+            const token = localStorage.getItem('token'); // Ensure user is authenticated
+            if (!token) {
+                alert("Unauthorized! Please log in.");
+                return;
+            }
+
+            if (!confirm("Are you sure you want to delete this event? This action cannot be undone.")) {
+                return; // Stop if user cancels
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/events/delete/${eventId}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert(result.message || "Event deleted successfully!");
+                    window.location.href = "/home"; // Redirect to events list after deletion
+                } else {
+                    throw new Error(result.message || "Failed to delete event.");
+                }
+            } catch (error) {
+                console.error("Error deleting event:", error);
+                alert(error.message);
             }
         });
 
-        const result = await response.json();
-        console.log("Fetched Event Data:", result);
-
-        const event = result.data;
-        if (!event || !event.eventId) {
-            throw new Error('Invalid event data received.');
-        }
-
-        // Display event details
-        document.getElementById('eventTitle').textContent = event.title;
-        document.getElementById('eventDescription').textContent = event.description;
-        document.getElementById('eventId').textContent = event.eventId;
-        document.getElementById('eventPassword').value = event.password;
-
-        // Select image grid
-        const imageGrid = document.getElementById('imageGrid');
-
-        // ✅ If images exist, show them; otherwise, show a GIF
-        if (event.images && event.images.length > 0) {
-            imageGrid.innerHTML = event.images.map(image => 
-                `<img src="${image}" alt="Event Image">`
-            ).join('');
-        } else {
-            imageGrid.innerHTML = `
-                <div style="text-align: center;">
-                    <img src="https://lottiefiles.com/animation/no-data-found-10917533" 
-                         alt="No images found" 
-                         style="width: 200px; border-radius: 10px;">
-                    <p>No images available for this event.</p>
-                </div>`;
-        }
-
-        // Update URL with the event ID
-        window.history.replaceState(null, "", `?eventId=${event.eventId}`);
-
-    } catch (error) {
-        console.error('Error fetching event details:', error);
-        alert(error.message || 'Failed to load event details. Please try again later.');
-    }
-}
- fetchEventDetails();
     </script>
 </body>

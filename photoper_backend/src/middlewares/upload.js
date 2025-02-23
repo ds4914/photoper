@@ -119,4 +119,15 @@ export const processVideo = async (req, res, next) => {
     }
 };
 
+// Function to delete a single image/video from Cloudinary
+export const deleteFromCloudinary = async (url) => {
+    try {
+        const publicId = url.split("/").pop().split(".")[0]; // Extract public ID from URL
+        await cloudinary.uploader.destroy(`events/${publicId}`);
+        console.log(`✅ Deleted from Cloudinary: ${url}`);
+    } catch (error) {
+        console.error(`❌ Error deleting from Cloudinary: ${url}`, error.message);
+    }
+};
+
 export { upload };

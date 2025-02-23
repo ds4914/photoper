@@ -92,9 +92,9 @@
             background-color: #cc0000;
         }
 
+
         .btn-purple {
             background-color: #6a0dad;
-            color: white;
             padding: 10px 15px;
             border-radius: 8px;
             font-weight: bold;
@@ -103,7 +103,8 @@
         }
 
         .btn-purple:hover {
-            background-color: #5a0bb5;
+            background-color: #6a0dad;
+            color: white ;
         }
 
         .event-description {
@@ -198,7 +199,7 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to fetch events');
+                    throw new Error('No events... please create event by clicking create event button');
                 }
 
                 const result = await response.json();

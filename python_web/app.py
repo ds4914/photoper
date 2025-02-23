@@ -25,6 +25,14 @@ def event_details():
 def create_event():
     return render_template('create-event.html')
 
+
+@app.route('/selected-images')
+def selected_images():
+    event_id = request.args.get('eventId')
+    password = request.args.get('password')
+    return render_template('selected-images.html', eventId=event_id, password=password)
+
+
 # Login route
 @app.route('/login', methods=['GET', 'POST'])
 def login():
