@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+
+<body>
+    <section class="container">
+        <div class="login-container">
+            <div class="circle circle-one"></div>
+            <div class="form-container">
+                <img src="https://raw.githubusercontent.com/hicodersofficial/glassmorphism-login-form/master/assets/illustration.png" alt="illustration" class="illustration" />
+                <h1 class="opacity">LOGIN</h1>
+                <form id="login-form">
+                    <input type="email" id="email" name="email" placeholder="EMAIL" required />
+                    <input type="password" id="password" name="password" placeholder="PASSWORD" required />
+                    <button type="submit" class="opacity">SUBMIT</button>
+                </form>
+                <div class="register-forget opacity">
+                    <a href="{{ url_for('signup') }}">REGISTER</a>
+                    <a href="#">FORGOT PASSWORD</a>
+                </div>
+            </div>
+            <div class="circle circle-two"></div>
+        </div>
+        <div class="theme-btn-container"></div>
+    </section>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            fetch("http://localhost:3000/user/signin", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message === "Login successful") {
+                    alert("Login successful!");
+                    localStorage.setItem('token', data.data.token);
+                    localStorage.setItem('username', data.data.username);
+                    window.location.href = "/home";
+                } else {
+                    alert("Login failed: " + data.message);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("There was an error with the login.");
+            });
+        });
+    </script>
+     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</body>
+</html>

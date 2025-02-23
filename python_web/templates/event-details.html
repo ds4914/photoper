@@ -1,0 +1,245 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Details</title>
+
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: url('https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExY3FmempoOXU0YzBzaTIxa3RqazFkZDV5dWV6YWk5bXhwY21kNTcwYiZlcD12MV9pbnRlcm5naWZfYnlfaWQmY3Q9Zw/PXApia9fVviiWREDRq/giphy.gif') no-repeat center center/cover;
+            min-height: 100vh;
+            color: white;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1;
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            padding-top: 20px;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .image-grid img {
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .btn-back {
+            background-color: #ff3333;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .btn-back:hover {
+            background-color: #cc0000;
+        }
+
+      /* Ensure event header is properly aligned */
+.event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* Right-align Event ID and Password */
+.event-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+}
+
+/* Password field styling */
+.password-container {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Space between password and eye icon */
+    background: rgba(255, 255, 255, 0.1);
+    padding: 5px 10px;
+    border-radius: 5px;
+    white-space: nowrap;
+}
+
+/* Password input */
+.password-container input {
+    background: none;
+    border: none;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    width: 120px;
+    outline: none;
+}
+
+/* Eye icon */
+.password-container i {
+    cursor: pointer;
+    font-size: 18px;
+    color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .event-header {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .event-info {
+        align-items: flex-start;
+        text-align: left;
+    }
+}
+
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <button class="btn btn-back" id="backButton"><i class="fas fa-arrow-left"></i> Back</button>
+    
+        <!-- 🔹 Event Header (Fully Responsive) -->
+        <div class="event-header">
+            <h1 id="eventTitle"></h1>
+            <div class="event-info">
+                <p>
+                    <strong>🆔 Event ID:</strong>
+                    <span id="eventId"></span>
+                    <i class="fas fa-copy" id="copyEventId" style="cursor: pointer; margin-left: 5px;"></i>
+                </p>
+                <p>
+                    <strong>🔒 Password:</strong>
+                    <input type="password" id="eventPassword" readonly style="background: none; border: none; color: white; font-weight: bold; text-align: center; width: 120px; outline: none;">
+                    <i class="fas fa-eye" id="togglePassword" style="cursor: pointer; margin-left: 5px;"></i>
+                </p>
+            </div>
+        </div>
+        <div id="eventDescription"></div>
+        <div class="image-grid" id="imageGrid"></div>
+    </div>
+
+    <script>
+        // Copy Event ID to clipboard
+        document.getElementById('copyEventId').addEventListener('click', () => {
+            const eventId = document.getElementById('eventId').textContent;
+            navigator.clipboard.writeText(eventId).then(() => {
+                alert('Event ID copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        });
+    </script>
+
+    <script>
+
+        // Back button functionality
+        document.getElementById('backButton').addEventListener('click', () => {
+            window.history.back();
+        });
+
+        // Password toggle functionality
+        document.getElementById('togglePassword').addEventListener('click', () => {
+            const passwordField = document.getElementById('eventPassword');
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+                document.getElementById('togglePassword').classList.replace("fa-eye", "fa-eye-slash");
+            } else {
+                passwordField.type = "password";
+                document.getElementById('togglePassword').classList.replace("fa-eye-slash", "fa-eye");
+            }
+        });
+
+        async function fetchEventDetails() {
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const paramEventId = urlParams.get('eventId');
+
+        if (!paramEventId) {
+            throw new Error('Event ID not found in URL.');
+        }
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('No authentication token found. Please log in.');
+        }
+
+        const response = await fetch(`http://localhost:3000/events/getEventById/${paramEventId}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const result = await response.json();
+        console.log("Fetched Event Data:", result);
+
+        const event = result.data;
+        if (!event || !event.eventId) {
+            throw new Error('Invalid event data received.');
+        }
+
+        // Display event details
+        document.getElementById('eventTitle').textContent = event.title;
+        document.getElementById('eventDescription').textContent = event.description;
+        document.getElementById('eventId').textContent = event.eventId;
+        document.getElementById('eventPassword').value = event.password;
+
+        // Select image grid
+        const imageGrid = document.getElementById('imageGrid');
+
+        // ✅ If images exist, show them; otherwise, show a GIF
+        if (event.images && event.images.length > 0) {
+            imageGrid.innerHTML = event.images.map(image => 
+                `<img src="${image}" alt="Event Image">`
+            ).join('');
+        } else {
+            imageGrid.innerHTML = `
+                <div style="text-align: center;">
+                    <img src="https://lottiefiles.com/animation/no-data-found-10917533" 
+                         alt="No images found" 
+                         style="width: 200px; border-radius: 10px;">
+                    <p>No images available for this event.</p>
+                </div>`;
+        }
+
+        // Update URL with the event ID
+        window.history.replaceState(null, "", `?eventId=${event.eventId}`);
+
+    } catch (error) {
+        console.error('Error fetching event details:', error);
+        alert(error.message || 'Failed to load event details. Please try again later.');
+    }
+}
+ fetchEventDetails();
+    </script>
+</body>
