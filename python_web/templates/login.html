@@ -11,6 +11,28 @@
     
     <!-- Custom Styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+
+    <style>
+        /* Style for the eye icon */
+        .password-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .eye-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 18px;
+            color: #aaa;
+        }
+
+        .eye-icon:hover {
+            color: #555;
+        }
+    </style>
 </head>
 
 <body>
@@ -22,7 +44,13 @@
                 <h1 class="opacity">LOGIN</h1>
                 <form id="login-form">
                     <input type="email" id="email" name="email" placeholder="EMAIL" required />
-                    <input type="password" id="password" name="password" placeholder="PASSWORD" required />
+                    
+                    <!-- Password Field with Eye Toggle -->
+                    <div class="password-container">
+                        <input type="password" id="password" name="password" placeholder="PASSWORD" required />
+                        <span id="togglePassword" class="eye-icon">👁️</span>
+                    </div>
+
                     <button type="submit" class="opacity">Login</button>
                 </form>
             </div>
@@ -32,6 +60,17 @@
     </section>
 
     <script>
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const passwordField = document.getElementById('password');
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+                this.textContent = "🙈"; // Change icon to closed eye
+            } else {
+                passwordField.type = "password";
+                this.textContent = "👁️"; // Change icon back to open eye
+            }
+        });
+
         document.getElementById('login-form').addEventListener('submit', function (event) {
             event.preventDefault();
 
@@ -60,6 +99,7 @@
             });
         });
     </script>
-     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 </body>
 </html>

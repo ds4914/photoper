@@ -5,7 +5,7 @@ app = Flask(__name__)
 # Home route
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('home.html')
 
 @app.route('/home')
 def home():
@@ -39,7 +39,6 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        # Here, add your logic for validating the login
         return redirect(url_for('home'))  # redirect to home if login is successful
     return render_template('login.html')
 
@@ -49,8 +48,7 @@ def signup():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        return redirect(url_for('login'))  # redirect to login after signup
-    return render_template('signup.html')
+        return redirect(url_for('login')) 
 
 if __name__ == '__main__':
     app.run(debug=True)

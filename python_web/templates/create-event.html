@@ -162,88 +162,105 @@
 
             <button type="submit" class="btn btn-purple w-100 mt-3"><i class="fas fa-check"></i> Create Event</button>
         </form>
-        <a href="/home" class="back-link">← Back to Home</a>
+        <a href="/home" class="back-link" id="backToHome">← Back to Home</a>
     </div>
 
     <script>
-        document.getElementById('create-event-form').addEventListener('submit', async function (e) {
-            e.preventDefault();
+       function toggleForm(disabled) {
+    document.getElementById('eventTitle').disabled = disabled;
+    document.getElementById('eventDescription').disabled = disabled;
+    document.getElementById('eventDate').disabled = disabled;
+    document.getElementById('eventImages').disabled = disabled;
+    document.getElementById('eventVideos').disabled = disabled;
 
-            const title = document.getElementById('eventTitle').value;
-            const description = document.getElementById('eventDescription').value;
-            const date = document.getElementById('eventDate').value;
-            const images = document.getElementById('eventImages').files;
-            const videos = document.getElementById('eventVideos').files;
-            const createButton = document.querySelector('button[type="submit"]');
-            const progressBarContainer = document.querySelector('.progress');
-            const progressBar = document.getElementById('progressBar');
+    // Disable or enable "Back to Home" link
+    const backLink = document.getElementById('backToHome');
+    if (disabled) {
+        backLink.style.pointerEvents = "none"; // Prevent clicks
+        backLink.style.opacity = "0.5"; // Make it visually disabled
+    } else {
+        backLink.style.pointerEvents = "auto";
+        backLink.style.opacity = "1";
+    }
+}
 
-            createButton.disabled = true;
-            createButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Compressing Images...';
-            const formData = new FormData();
-            formData.append('title', title);
-            formData.append('description', description);
-            formData.append('event_date', date);
+document.getElementById('create-event-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
 
-            try {
-                const options = {
-                    maxSizeMB: 0.2,
-                    maxWidthOrHeight: 800,
-                    useWebWorker: true
-                };
+    toggleForm(true); // Disable fields and link
 
-                progressBarContainer.style.display = "block"; // Show progress bar
+    const title = document.getElementById('eventTitle').value;
+    const description = document.getElementById('eventDescription').value;
+    const date = document.getElementById('eventDate').value;
+    const images = document.getElementById('eventImages').files;
+    const videos = document.getElementById('eventVideos').files;
+    const createButton = document.querySelector('button[type="submit"]');
+    const progressBarContainer = document.querySelector('.progress');
+    const progressBar = document.getElementById('progressBar');
 
-                for (let i = 0; i < images.length; i++) {
-                    let compressedImage = await imageCompression(images[i], options);
+    createButton.disabled = true;
+    createButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Compressing Images...';
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('event_date', date);
 
-                    // Convert to File object with a unique name to prevent overwriting
-                    let compressedFile = new File([compressedImage], images[i].name, {
-                        type: compressedImage.type,
-                        lastModified: Date.now()
-                    });
+    try {
+        const options = {
+            maxSizeMB: 0.2,
+            maxWidthOrHeight: 800,
+            useWebWorker: true
+        };
 
-                    formData.append('images', compressedFile);
+        progressBarContainer.style.display = "block"; // Show progress bar
 
-                    // Update Progress Bar
-                    let progress = Math.round(((i + 1) / images.length) * 100);
-                    progressBar.style.width = progress + "%";
-                    progressBar.innerText = progress + "%";
-                }
+        for (let i = 0; i < images.length; i++) {
+            let compressedImage = await imageCompression(images[i], options);
+            let compressedFile = new File([compressedImage], images[i].name, {
+                type: compressedImage.type,
+                lastModified: Date.now()
+            });
 
-                createButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Event...';
+            formData.append('images', compressedFile);
 
-                for (let vid of videos) {
-                    formData.append('videos', vid);
-                }
+            let progress = Math.round(((i + 1) / images.length) * 100);
+            progressBar.style.width = progress + "%";
+            progressBar.innerText = progress + "%";
+        }
 
-                const token = localStorage.getItem('token');
-                const response = await fetch('http://localhost:3000/events/create', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: formData
-                });
+        createButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Event...';
 
-                const result = await response.json();
-                if (response.ok) {
-                    alert('Event created successfully!');
-                    window.location.href = "/home";
-                } else {
-                    alert(result.message || 'Failed to create event');
-                }
-            } catch (error) {
-                console.error('Error creating event:', error);
-                alert('Something went wrong. Please try again.');
-            } finally {
-                createButton.disabled = false;
-                createButton.innerHTML = '<i class="fas fa-check"></i> Create Event';
-                progressBarContainer.style.display = "none"; // Hide progress bar
-            }
+        for (let vid of videos) {
+            formData.append('videos', vid);
+        }
 
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:3000/events/create', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
         });
-    </script>
+
+        const result = await response.json();
+        if (response.ok) {
+            alert('Event created successfully!');
+            window.location.href = "/home";
+        } else {
+            alert(result.message || 'Failed to create event');
+        }
+    } catch (error) {
+        console.error('Error creating event:', error);
+        alert('Something went wrong. Please try again.');
+    } finally {
+        createButton.disabled = false;
+        createButton.innerHTML = '<i class="fas fa-check"></i> Create Event';
+        progressBarContainer.style.display = "none"; // Hide progress bar
+        toggleForm(false); // Enable fields and link
+    }
+});
+ </script>
 
 </body>
 
