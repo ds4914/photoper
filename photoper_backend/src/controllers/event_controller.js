@@ -15,7 +15,7 @@ export const createEvent = async (req, res) => {
 
         if (eventId) {
             // Updating an existing event
-            const event = await Event.findById(eventId);
+            const event = await Event.findOne({ eventId: eventId });
             if (!event) {
                 return res.status(404).json({ message: "Event not found", data: {} });
             }
@@ -42,7 +42,6 @@ export const createEvent = async (req, res) => {
                 },
             });
         } else {
-            // Creating a new event
             if (!title || !description || !event_date) {
                 return res.status(400).json({ message: "Title, description, and event date are required", data: {} });
             }
